@@ -1,0 +1,37 @@
+# Generating dummy data
+set.seed(456)  # Setting seed for reproducibility
+n <- 200  # Number of observations
+x1 <- rnorm(n, mean = 50, sd = 10)  # Independent variable 1 (normally distributed)
+x2 <- rnorm(n, mean = 30, sd = 5)   # Independent variable 2 (normally distributed)
+epsilon <- rnorm(n, mean = 0, sd = 3)  # Error term (normally distributed with mean 0, sd 3)
+logit_prob <- plogis(-5 + 0.1*x1 - 0.2*x2 + epsilon)  # Logit function with noise
+y <- rbinom(n, 1, logit_prob)  # Binary dependent variable based on logit_prob
+
+# Creating a data frame
+dummy_data <- data.frame(y = factor(y), x1 = x1, x2 = x2)  # Convert y to factor for classification
+
+# Perform logistic regression
+logit_model <- glm(y ~ x1 + x2, data = dummy_data, family = "binomial")
+
+# Summary of the logistic regression results
+summary(logit_model)
+
+# Predicting probabilities using the model
+predicted_probabilities <- predict(logit_model, dummy_data, type = "response")
+
+# Converting probabilities to predicted classes (0 or 1)
+predicted_classes <- ifelse(predicted_probabilities > 0.5, 1, 0)
+
+# Confusion matrix
+conf_matrix <- table(dummy_data$y, predicted_classes)
+print(conf_matrix)
+
+# Accuracy calculation
+accuracy <- sum(diag(conf_matrix)) / sum(conf_matrix)
+cat("Accuracy:", accuracy, "\n")
+
+# Plotting ROC curve
+library(pROC)
+roc_obj <- roc(dummy_data$y, predicted_probabilities)
+plot(roc_obj, main = "ROC Curve for Logistic Regression", col = "blue")
+lines(c(0,1), c(0,1), col = "red")  # Add diagonal line for reference
